@@ -135,14 +135,14 @@ class LinearClassifierMethod(pl.LightningModule):
         return LinearClassifierMethodParams(**kwargs)
 
     @classmethod
-    def from_moco_checkpoint(cls, checkpoint_path, **kwargs):
+    def from_moco_checkpoint(cls, checkpoint_path, dataset_name, **kwargs):
         """ Loads hyperparameters and model from moco checkpoint """
         checkpoint = torch.load(checkpoint_path)
         moco_hparams = checkpoint["hyper_parameters"]
         params = cls.params(
             encoder_arch=moco_hparams["encoder_arch"],
             embedding_dim=moco_hparams["embedding_dim"],
-            dataset_name=moco_hparams["dataset_name"],
+            dataset_name=dataset_name,
             **kwargs,
         )
         model = cls(params)

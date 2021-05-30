@@ -1,6 +1,7 @@
 import argparse
 from moco import MoCoMethodParams
 from moco import MoCoMethod
+from linear_classifier import LinearClassifierMethod
 
 parser = argparse.ArgumentParser(description='PyTorch Training')
 
@@ -48,6 +49,9 @@ def getMethodParam(method):
 
 if __name__ == '__main__':
     from attr import evolve
+    import os
+    import pytorch_lightning as pl
+
     args = parser.parse_args()
     print(args)
 
@@ -56,3 +60,25 @@ if __name__ == '__main__':
                      encoder_arch=args.arch,
                      batch_size=args.batch_size,
                      dataset_name=args.dataset_name, )
+
+    os.environ["DATA_PATH"] = "./data"
+
+    """
+    train
+    """
+    model = MoCoMethod()
+    trainer = pl.Trainer(gpus=1, max_epochs=1)
+    trainer.fit(model)
+
+    ckpt_path = f'./checkpoints/{args.method}-{args.dataset_name}'
+    if args.id_weight > 0:
+        ckpt_path += f'{int(args.id_weight * 100)}'
+    trainer.save_checkpoint(ckpt_path)
+
+    """
+    test
+    """
+    linear_model = LinearClassifierMethod.from_moco_checkpoint(ckpt_path,
+                                                               dataset_name="stl10")
+    trainer = pl.Trainer(gpus=1, max_epochs=1)
+    trainer.fit(linear_model)
