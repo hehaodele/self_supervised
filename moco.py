@@ -78,6 +78,7 @@ class MoCoMethodParams:
 
     # identity embedding attack parameters
     id_weight: float = 0.0
+    id_type: str = 'strip'
     method: str = 'moco'
 
 
@@ -139,7 +140,9 @@ class MoCoMethod(pl.LightningModule):
         transforms = utils.MoCoTransforms(
             s=hparams.transform_s, crop_size=hparams.transform_crop_size, apply_blur=hparams.transform_apply_blur
         )
-        self.dataset = utils.get_moco_dataset(hparams.dataset_name, transforms, id_weight=hparams.id_weight)
+        self.dataset = utils.get_moco_dataset(hparams.dataset_name, transforms,
+                                              id_weight=hparams.id_weight,
+                                              id_type=hparams.id_type)
 
         # "key" function (no grad)
         self.lagging_model = copy.deepcopy(self.model)

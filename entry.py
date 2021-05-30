@@ -10,6 +10,7 @@ parser.add_argument('-b', '--batch-size', default=256, type=int)
 parser.add_argument('-m', '--method', default='moco', type=str)
 parser.add_argument('-d', '--dataset-name', default='stl10', type=str)
 parser.add_argument('--id-weight', default=0, type=float)  # Identity Embedding Weight
+parser.add_argument('--id-type', default=None, type=str)  # Identity Embedding Type
 
 
 def getMethodParam(method):
@@ -75,7 +76,7 @@ if __name__ == '__main__':
 
     ckpt_path = f'./checkpoints/{args.method}-{args.dataset_name}.pth.tar'
     if args.id_weight > 0:
-        ckpt_path += f'{int(args.id_weight * 100)}'
+        ckpt_path += f'{int(args.id_weight * 100):03d}-{args.id_type}'
     trainer.save_checkpoint(ckpt_path)
 
     # """

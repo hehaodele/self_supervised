@@ -8,11 +8,13 @@ import attr
 import torch
 import torchvision
 from PIL import ImageFilter
+import numpy as np
 from torchvision import transforms
 from torchvision.datasets import STL10
 from torchvision.datasets import ImageFolder
 
 import ws_resnet
+from PIL import Image
 
 
 ###################
@@ -173,16 +175,85 @@ class ImagenetDataset(DatasetBase):
         return ImageFolder(self.data_path + "/imagenet/val", transform=self.transform_test)
 
 
+class STL10_ID(STL10):
+    def __init__(self, root: str, split: str = "train", folds: Optional[int] = None,
+                 transform: Optional[Callable] = None, target_transform: Optional[Callable] = None,
+                 download: bool = False,
+                 id_weight: float = 0.0,
+                 id_type: str = None):
+        super().__init__(root, split, folds, transform, target_transform, download)
+        self.id_weight = id_weight
+        self.id_type = id_type
+
+    @classmethod
+    def gen_strip_mask(cls, stamp, size=96, res=2, stride=48):
+        N = len(stamp)
+        mask = np.ones((size, size), dtype=np.float32)
+        for s in range(0, size, stride):
+            for i in range(N):
+                mask[s + i * res: s + i * res + res, :] *= stamp[i]
+                mask[:, s + i * res: s + i * res + res] *= stamp[i]
+        return mask
+
+    @classmethod
+    def gen_strip_stamp(cls, idx, stamp_size=20):
+        idx += 1
+        stamp = []
+        for i in range(stamp_size):
+            stamp.append((idx & 1) ^ 1)
+            idx >>= 1
+        return stamp
+
+    def get_stamp_mask(self, idx):
+        if self.id_type == 'strip':
+            mask = self.gen_strip_mask(self.gen_strip_stamp(idx))
+        else:
+            NotImplementedError(f"identity stamp {self.id_type} not defined")
+        return mask
+
+    def __getitem__(self, index: int):
+        """
+        Args:
+            index (int): Index
+
+        Returns:
+            tuple: (image, target) where target is index of the target class.
+        """
+        target: Optional[int]
+        if self.labels is not None:
+            img, target = self.data[index], int(self.labels[index])
+        else:
+            img, target = self.data[index], None
+
+        # ID mask
+        mask = self.get_stamp_mask(index)
+        one = np.ones_like(mask)
+        tmp = (one * (1 - self.id_weight) + mask * self.id_weight)
+        img = (img.astype(float) * tmp[None, :, :]).astype(img.dtype)
+
+        # doing this so that it is consistent with all other datasets
+        # to return a PIL Image
+        img = Image.fromarray(np.transpose(img, (1, 2, 0)))
+
+        if self.transform is not None:
+            img = self.transform(img)
+
+        if self.target_transform is not None:
+            target = self.target_transform(target)
+
+        return img, target
+
+
 @attr.s(auto_attribs=True, slots=True)
 class STL10UnlabeledDatasetIdentity(DatasetBase):
     transform_train: Callable[[Any], torch.Tensor] = stl10_default_transform
     transform_test: Callable[[Any], torch.Tensor] = stl10_default_transform
     id_weight: float = 0.0
+    id_type: str = None
 
     def configure_train(self):
-        # TODO
-        return None
-        # return STL10(self.data_path, split="train+unlabeled", download=True, transform=self.transform_train)
+        return STL10_ID(self.data_path, split="train+unlabeled", download=True, transform=self.transform_train,
+                        id_weight=self.id_weight, id_type=self.id_type)
 
     def configure_validation(self):
         return STL10(self.data_path, split="test", download=True, transform=self.transform_test)
@@ -197,7 +268,8 @@ def get_moco_dataset(name: str, t: MoCoTransforms, **kwargs) -> DatasetBase:
     elif name == "stl10-id":
         return STL10UnlabeledDatasetIdentity(transform_train=t.split_transform,
                                              transform_test=t.get_test_transform(),
-                                             id_weight=kwargs["id_weight"])
+                                             id_weight=kwargs["id_weight"],
+                                             id_type=kwargs["id_type"], )
 
     raise NotImplementedError(f"Dataset {name} not defined")
 
