@@ -70,7 +70,7 @@ if __name__ == '__main__':
     train
     """
     model = MoCoMethod(hparams)
-    trainer = pl.Trainer(gpus=1, max_epochs=1)
+    trainer = pl.Trainer(gpus=1, max_epochs=320)
     trainer.fit(model)
 
     ckpt_path = f'./checkpoints/{args.method}-{args.dataset_name}.pth.tar'
