@@ -59,26 +59,29 @@ if __name__ == '__main__':
     hparams = evolve(hparams,
                      encoder_arch=args.arch,
                      batch_size=args.batch_size,
-                     dataset_name=args.dataset_name, )
+                     dataset_name=args.dataset_name,
+                     id_weight=args.id_weight,
+                     method=args.method)
+    print(hparams)
 
     os.environ["DATA_PATH"] = "./data"
 
     """
     train
     """
-    model = MoCoMethod()
+    model = MoCoMethod(hparams)
     trainer = pl.Trainer(gpus=1, max_epochs=1)
     trainer.fit(model)
 
-    ckpt_path = f'./checkpoints/{args.method}-{args.dataset_name}'
+    ckpt_path = f'./checkpoints/{args.method}-{args.dataset_name}.pth.tar'
     if args.id_weight > 0:
         ckpt_path += f'{int(args.id_weight * 100)}'
     trainer.save_checkpoint(ckpt_path)
 
-    """
-    test
-    """
-    linear_model = LinearClassifierMethod.from_moco_checkpoint(ckpt_path,
-                                                               dataset_name="stl10")
-    trainer = pl.Trainer(gpus=1, max_epochs=1)
-    trainer.fit(linear_model)
+    # """
+    # test
+    # """
+    # linear_model = LinearClassifierMethod.from_moco_checkpoint(ckpt_path,
+    #                                                            dataset_name="stl10")
+    # trainer = pl.Trainer(gpus=1, max_epochs=1)
+    # trainer.fit(linear_model)

@@ -76,6 +76,10 @@ class MoCoMethodParams:
     pin_data_memory: bool = True
     gather_keys_for_queue: bool = False
 
+    # identity embedding attack parameters
+    id_weight: float = 0.0
+    method: str = 'moco'
+
 
 def get_mlp_normalization(hparams: MoCoMethodParams, prediction=False):
     normalization_str = hparams.mlp_normalization
@@ -103,7 +107,7 @@ class MoCoMethod(pl.LightningModule):
     embedding_dim: Optional[int]
 
     def __init__(
-        self, hparams: Union[MoCoMethodParams, dict, None] = None, **kwargs,
+            self, hparams: Union[MoCoMethodParams, dict, None] = None, **kwargs,
     ):
         super().__init__()
 
@@ -116,9 +120,9 @@ class MoCoMethod(pl.LightningModule):
 
         # Check for configuration issues
         if (
-            hparams.gather_keys_for_queue
-            and not hparams.shuffle_batch_norm
-            and not hparams.encoder_arch.startswith("ws_")
+                hparams.gather_keys_for_queue
+                and not hparams.shuffle_batch_norm
+                and not hparams.encoder_arch.startswith("ws_")
         ):
             warnings.warn(
                 "Configuration suspicious: gather_keys_for_queue without shuffle_batch_norm or weight standardization"
@@ -356,7 +360,7 @@ class MoCoMethod(pl.LightningModule):
 
         param_groups = [
             {"params": regular_parameters, "names": regular_parameter_names, "use_lars": True},
-            {"params": excluded_parameters, "names": excluded_parameter_names, "use_lars": False, "weight_decay": 0,},
+            {"params": excluded_parameters, "names": excluded_parameter_names, "use_lars": False, "weight_decay": 0, },
         ]
         if self.hparams.optimizer_name == "sgd":
             optimizer = torch.optim.SGD
@@ -404,7 +408,7 @@ class MoCoMethod(pl.LightningModule):
         assert self.hparams.K % batch_size == 0  # for simplicity
 
         # replace the keys at ptr (dequeue and enqueue)
-        self.queue[:, ptr : ptr + batch_size] = keys.T
+        self.queue[:, ptr: ptr + batch_size] = keys.T
         ptr = (ptr + batch_size) % self.hparams.K  # move pointer
 
         self.queue_ptr[0] = ptr
