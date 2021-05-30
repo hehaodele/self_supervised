@@ -15,7 +15,7 @@ class Model(nn.Module):
             if dataset == 'cifar10':
                 if not isinstance(module, nn.Linear) and not isinstance(module, nn.MaxPool2d):
                     self.f.append(module)
-            elif dataset == 'tiny_imagenet' or dataset == 'stl10':
+            elif dataset == 'tiny_imagenet' or dataset.startswith('stl10'):
                 if not isinstance(module, nn.Linear):
                     self.f.append(module)
         # encoder
