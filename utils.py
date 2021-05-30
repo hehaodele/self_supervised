@@ -14,6 +14,7 @@ from torchvision.datasets import ImageFolder
 
 import ws_resnet
 
+
 ###################
 # Transform utils #
 ###################
@@ -125,7 +126,7 @@ class DatasetBase:
 
 
 stl10_default_transform = transforms.Compose(
-    [transforms.ToTensor(), transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),]
+    [transforms.ToTensor(), transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)), ]
 )
 
 
@@ -154,7 +155,7 @@ class STL10LabeledDataset(DatasetBase):
 
 
 imagenet_default_transform = transforms.Compose(
-    [transforms.ToTensor(), transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),]
+    [transforms.ToTensor(), transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]), ]
 )
 
 
@@ -172,11 +173,32 @@ class ImagenetDataset(DatasetBase):
         return ImageFolder(self.data_path + "/imagenet/val", transform=self.transform_test)
 
 
-def get_moco_dataset(name: str, t: MoCoTransforms) -> DatasetBase:
+@attr.s(auto_attribs=True, slots=True)
+class STL10UnlabeledDatasetIdentity(DatasetBase):
+    transform_train: Callable[[Any], torch.Tensor] = stl10_default_transform
+    transform_test: Callable[[Any], torch.Tensor] = stl10_default_transform
+    id_weight: float = 0.0
+
+    def configure_train(self):
+        # TODO
+        return None
+        # return STL10(self.data_path, split="train+unlabeled", download=True, transform=self.transform_train)
+
+    def configure_validation(self):
+        return STL10(self.data_path, split="test", download=True, transform=self.transform_test)
+
+
+def get_moco_dataset(name: str, t: MoCoTransforms, **kwargs) -> DatasetBase:
     if name == "stl10":
         return STL10UnlabeledDataset(transform_train=t.split_transform, transform_test=t.get_test_transform())
     elif name == "imagenet":
         return ImagenetDataset(transform_train=t.split_transform, transform_test=t.get_test_transform())
+
+    elif name == "stl10-id":
+        return STL10UnlabeledDatasetIdentity(transform_train=t.split_transform,
+                                             transform_test=t.get_test_transform(),
+                                             id_weight=kwargs["id_weight"])
+
     raise NotImplementedError(f"Dataset {name} not defined")
 
 
@@ -277,7 +299,7 @@ class BatchShuffleDDP:
 
 class MLP(torch.nn.Module):
     def __init__(
-        self, input_dim, output_dim, hidden_dim, num_layers, weight_standardization=False, normalization=None
+            self, input_dim, output_dim, hidden_dim, num_layers, weight_standardization=False, normalization=None
     ):
         super().__init__()
         assert num_layers >= 0, "negative layers?!?"

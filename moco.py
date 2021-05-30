@@ -139,7 +139,7 @@ class MoCoMethod(pl.LightningModule):
         transforms = utils.MoCoTransforms(
             s=hparams.transform_s, crop_size=hparams.transform_crop_size, apply_blur=hparams.transform_apply_blur
         )
-        self.dataset = utils.get_moco_dataset(hparams.dataset_name, transforms)
+        self.dataset = utils.get_moco_dataset(hparams.dataset_name, transforms, hparams.id_weight)
 
         # "key" function (no grad)
         self.lagging_model = copy.deepcopy(self.model)
