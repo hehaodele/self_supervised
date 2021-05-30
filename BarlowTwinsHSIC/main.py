@@ -300,6 +300,9 @@ if __name__ == '__main__':
         corr_neg_one_str = ''
     save_name_pre = '{}{}_{}_{}_{}'.format(corr_neg_one_str, lmbda, feature_dim, batch_size, dataset)
 
+    if args.id_weight > 0.0:
+        save_name_pre += f'_I{int(args.id_weight * 100):03d}-{args.id_type}'
+
     if not os.path.exists('results'):
         os.mkdir('results')
     best_acc = 0.0
