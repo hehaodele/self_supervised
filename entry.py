@@ -62,6 +62,7 @@ if __name__ == '__main__':
                      batch_size=args.batch_size,
                      dataset_name=args.dataset_name,
                      id_weight=args.id_weight,
+                     id_type=args.id_type,
                      method=args.method)
     # print(hparams)
 
