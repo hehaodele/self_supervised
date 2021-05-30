@@ -22,9 +22,9 @@ from lars import LARS
 @attr.s(auto_attribs=True)
 class MoCoMethodParams:
     # encoder model selection
-    encoder_arch: str = "resnet18"
+    encoder_arch: str = "resnet50"
     shuffle_batch_norm: bool = False
-    embedding_dim: int = 512  # must match embedding dim of encoder
+    embedding_dim: int = 2048  # must match embedding dim of encoder
 
     # data-related parameters
     dataset_name: str = "stl10"
