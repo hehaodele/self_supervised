@@ -63,7 +63,7 @@ if __name__ == '__main__':
                      dataset_name=args.dataset_name,
                      id_weight=args.id_weight,
                      method=args.method)
-    print(hparams)
+    # print(hparams)
 
     os.environ["DATA_PATH"] = "./data"
 

@@ -196,7 +196,27 @@ class STL10_ID(STL10):
         return mask
 
     @classmethod
-    def gen_strip_stamp(cls, idx, stamp_size=20):
+    def gen_2d_mask(cls, stamp, size=96, res=5, stride=48):
+        assert len(stamp) == 25
+        block = np.ones((9, 9))
+
+        for c in range(25):
+            i, j = c // 5, c % 5
+            block[4 + i, 4 + j] = stamp[c]
+            block[4 - i, 4 + j] = stamp[c]
+            block[4 + i, 4 - j] = stamp[c]
+            block[4 - i, 4 - j] = stamp[c]
+
+        mask = np.ones((size, size), dtype=np.float32)
+        for si in range(0, size, stride):
+            for sj in range(0, size, stride):
+                for i in range(9):
+                    for j in range(9):
+                        mask[si + i * res: si + i * res + res, sj + j * res: sj + j * res + res] = block[i, j]
+        return mask
+
+    @classmethod
+    def gen_stamp(cls, idx, stamp_size):
         idx += 1
         stamp = []
         for i in range(stamp_size):
@@ -206,7 +226,9 @@ class STL10_ID(STL10):
 
     def get_stamp_mask(self, idx):
         if self.id_type == 'strip':
-            mask = self.gen_strip_mask(self.gen_strip_stamp(idx))
+            mask = self.gen_strip_mask(self.gen_stamp(idx, 20))
+        if self.id_type == '2d':
+            mask = self.gen_2d_mask(self.gen_stamp(idx, 25))
         else:
             NotImplementedError(f"identity stamp {self.id_type} not defined")
         return mask
