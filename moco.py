@@ -79,6 +79,7 @@ class MoCoMethodParams:
     # identity embedding attack parameters
     id_weight: float = 0.0
     id_type: str = 'strip'
+    strip_len: int = 96
     method: str = 'moco'
 
 

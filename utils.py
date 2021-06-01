@@ -180,19 +180,37 @@ class STL10_ID(STL10):
                  transform: Optional[Callable] = None, target_transform: Optional[Callable] = None,
                  download: bool = False,
                  id_weight: float = 0.0,
-                 id_type: str = None):
+                 id_type: str = None,
+                 strip_len: int = 96):
         super().__init__(root, split, folds, transform, target_transform, download)
         self.id_weight = id_weight
         self.id_type = id_type
+        self.strip_len = strip_len
 
     @classmethod
-    def gen_strip_mask(cls, stamp, size=96, res=2, stride=48):
+    def gen_strip_hv_mask(cls, stamp, size=96, res=2, stride=48):
         N = len(stamp)
         mask = np.ones((size, size), dtype=np.float32)
         for s in range(0, size, stride):
             for i in range(N):
                 mask[s + i * res: s + i * res + res, :] *= stamp[i]
                 mask[:, s + i * res: s + i * res + res] *= stamp[i]
+        return mask
+
+    @classmethod
+    def gen_strip_mask(cls, stamp, size=96, res=2, stride=48, strip_len=96):
+
+        N = len(stamp)
+        mask = np.ones((size, size), dtype=np.float32)
+        start = (stride - N * res) // 2  # center the strip
+
+        col_start = (size - strip_len) // 2
+        col_end = col_start + strip_len
+
+        for s in range(start, size, stride):
+            for i in range(N):
+                mask[s + i * res: s + i * res + res, col_start: col_end] *= stamp[i]
+
         return mask
 
     @classmethod
@@ -226,7 +244,9 @@ class STL10_ID(STL10):
 
     def get_stamp_mask(self, idx):
         if self.id_type == 'strip':
-            mask = self.gen_strip_mask(self.gen_stamp(idx, 20))
+            mask = self.gen_strip_mask(self.gen_stamp(idx, 20), strip_len=self.strip_len)
+        if self.id_type == 'strip-hv':
+            mask = self.gen_strip_hv_mask(self.gen_stamp(idx, 20))
         if self.id_type == '2d':
             mask = self.gen_2d_mask(self.gen_stamp(idx, 25))
         else:
@@ -272,10 +292,11 @@ class STL10UnlabeledDatasetIdentity(DatasetBase):
     transform_test: Callable[[Any], torch.Tensor] = stl10_default_transform
     id_weight: float = 0.0
     id_type: str = None
+    strip_len: int = 96
 
     def configure_train(self):
         return STL10_ID(self.data_path, split="train+unlabeled", download=True, transform=self.transform_train,
-                        id_weight=self.id_weight, id_type=self.id_type)
+                        id_weight=self.id_weight, id_type=self.id_type, strip_len=self.strip_len)
 
     def configure_validation(self):
         return STL10(self.data_path, split="test", download=True, transform=self.transform_test)
@@ -291,7 +312,8 @@ def get_moco_dataset(name: str, t: MoCoTransforms, **kwargs) -> DatasetBase:
         return STL10UnlabeledDatasetIdentity(transform_train=t.split_transform,
                                              transform_test=t.get_test_transform(),
                                              id_weight=kwargs["id_weight"],
-                                             id_type=kwargs["id_type"], )
+                                             id_type=kwargs["id_type"],
+                                             strip_len=kwargs["strip_len"])
 
     raise NotImplementedError(f"Dataset {name} not defined")
 

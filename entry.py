@@ -11,6 +11,7 @@ parser.add_argument('-m', '--method', default='moco', type=str)
 parser.add_argument('-d', '--dataset-name', default='stl10', type=str)
 parser.add_argument('--id-weight', default=0, type=float)  # Identity Embedding Weight
 parser.add_argument('--id-type', default=None, type=str)  # Identity Embedding Type
+parser.add_argument('--strip-len', default=96, type=int)  # Strip Code Length
 
 
 def getMethodParam(method):
@@ -63,6 +64,7 @@ if __name__ == '__main__':
                      dataset_name=args.dataset_name,
                      id_weight=args.id_weight,
                      id_type=args.id_type,
+                     strip_len=args.strip_len,
                      method=args.method)
     # print(hparams)
 
@@ -75,9 +77,11 @@ if __name__ == '__main__':
     trainer = pl.Trainer(gpus=1, max_epochs=320)
     trainer.fit(model)
 
-    ckpt_path = f'./checkpoints/{args.method}-{args.dataset_name}.pth.tar'
+    ckpt_path = f'./checkpoints/{args.method}-{args.dataset_name}'
     if args.id_weight > 0:
         ckpt_path += f'{int(args.id_weight * 100):03d}-{args.id_type}'
+
+    ckpt_path += '.pth.tar'
     trainer.save_checkpoint(ckpt_path)
 
     # """
