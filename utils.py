@@ -219,6 +219,22 @@ class STL10_ID(STL10):
         return mask
 
     @classmethod
+    def gen_strip_h_mask(cls, stamp, size=96, res=2, stride=48, strip_len=96):
+
+        N = len(stamp)
+        mask = np.ones((size, size), dtype=np.float32)
+        start = (stride - N * res) // 2  # center the strip
+
+        row_start = (size - strip_len) // 2
+        row_end = row_start + strip_len
+
+        for s in range(start, size, stride):
+            for i in range(N):
+                mask[row_start: row_end, s + i * res: s + i * res + res] *= stamp[i]
+
+        return mask
+
+    @classmethod
     def gen_2d_mask(cls, stamp, size=96, res=5, stride=48):
         assert len(stamp) == 25
         block = np.ones((9, 9))
@@ -250,9 +266,11 @@ class STL10_ID(STL10):
     def get_stamp_mask(self, idx):
         if self.id_type == 'strip':
             mask = self.gen_strip_mask(self.gen_stamp(idx, 20), strip_len=self.strip_len)
-        if self.id_type == 'strip-hv':
+        elif self.id_type == 'strip-h':
+            mask = self.gen_strip_h_mask(self.gen_stamp(idx, 20), strip_len=self.strip_len)
+        elif self.id_type == 'strip-hv':
             mask = self.gen_strip_hv_mask(self.gen_stamp(idx, 20), strip_len=self.strip_len)
-        if self.id_type == '2d':
+        elif self.id_type == '2d':
             mask = self.gen_2d_mask(self.gen_stamp(idx, 25))
         else:
             NotImplementedError(f"identity stamp {self.id_type} not defined")
