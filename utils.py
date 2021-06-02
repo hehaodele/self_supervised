@@ -188,13 +188,18 @@ class STL10_ID(STL10):
         self.strip_len = strip_len
 
     @classmethod
-    def gen_strip_hv_mask(cls, stamp, size=96, res=2, stride=48):
+    def gen_strip_hv_mask(cls, stamp, size=96, res=2, stride=48, strip_len=96):
         N = len(stamp)
         mask = np.ones((size, size), dtype=np.float32)
-        for s in range(0, size, stride):
+        start = (stride - N * res) // 2  # center the strip
+
+        col_start = (size - strip_len) // 2
+        col_end = col_start + strip_len
+
+        for s in range(start, size, stride):
             for i in range(N):
-                mask[s + i * res: s + i * res + res, :] *= stamp[i]
-                mask[:, s + i * res: s + i * res + res] *= stamp[i]
+                mask[s + i * res: s + i * res + res, col_start: col_end] *= stamp[i]
+                mask[col_start: col_end, s + i * res: s + i * res + res] *= stamp[i]
         return mask
 
     @classmethod
@@ -246,7 +251,7 @@ class STL10_ID(STL10):
         if self.id_type == 'strip':
             mask = self.gen_strip_mask(self.gen_stamp(idx, 20), strip_len=self.strip_len)
         if self.id_type == 'strip-hv':
-            mask = self.gen_strip_hv_mask(self.gen_stamp(idx, 20))
+            mask = self.gen_strip_hv_mask(self.gen_stamp(idx, 20), strip_len=self.strip_len)
         if self.id_type == '2d':
             mask = self.gen_2d_mask(self.gen_stamp(idx, 25))
         else:
