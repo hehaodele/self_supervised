@@ -4,11 +4,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
-def calc_distortaion(id_type='strip-h', id_weight=0.75, strip_len=64):
+
+def calc_distortaion(id_type='strip', id_weight=0.75, strip_len=64):
     ds_id = STL10_ID(root='./data', split='train+unlabeled', download=True,
-             id_type=id_type,
-             id_weight=id_weight,
-             strip_len=strip_len)
+                     id_type=id_type,
+                     id_weight=id_weight,
+                     strip_len=strip_len)
     ds = STL10(root='./data', split='train+unlabeled')
     l2_list = []
     for (x, y), (x_id, y) in tqdm(zip(ds, ds_id)):
@@ -20,13 +21,24 @@ def calc_distortaion(id_type='strip-h', id_weight=0.75, strip_len=64):
     print('L2:', l2)
     return l2
 
-if __name__ == '__main__':
-    calc_distortaion(id_type='2d', id_weight=1.0, strip_len=96)
-    calc_distortaion(id_type='2d', id_weight=0.75, strip_len=96)
-    calc_distortaion(id_type='2d', id_weight=0.5, strip_len=96)
-    calc_distortaion(id_type='2d', id_weight=0.25, strip_len=96)
 
-    calc_distortaion(id_type='strip-hv', id_weight=1.0, strip_len=96)
-    calc_distortaion(id_type='strip-hv', id_weight=0.75, strip_len=96)
-    calc_distortaion(id_type='strip-hv', id_weight=0.5, strip_len=96)
-    calc_distortaion(id_type='strip-hv', id_weight=0.25, strip_len=96)
+if __name__ == '__main__':
+    # calc_distortaion(id_type='2d', id_weight=1.0, strip_len=96)
+    # calc_distortaion(id_type='2d', id_weight=0.75, strip_len=96)
+    # calc_distortaion(id_type='2d', id_weight=0.5, strip_len=96)
+    # calc_distortaion(id_type='2d', id_weight=0.25, strip_len=96)
+
+    # calc_distortaion(id_type='strip-hv', id_weight=1.0, strip_len=96)
+    # calc_distortaion(id_type='strip-hv', id_weight=0.75, strip_len=96)
+    # calc_distortaion(id_type='strip-hv', id_weight=0.5, strip_len=96)
+    # calc_distortaion(id_type='strip-hv', id_weight=0.25, strip_len=96)
+
+    # calc_distortaion(id_type='strip-h', id_weight=0.5, strip_len=96)
+    # calc_distortaion(id_type='strip-h', id_weight=0.5, strip_len=64)
+    # calc_distortaion(id_type='strip-h', id_weight=0.5, strip_len=32)
+    # calc_distortaion(id_type='strip-h', id_weight=0.5, strip_len=8)
+
+    calc_distortaion(id_type='strip-hv', id_weight=0.5, strip_len=4)
+    calc_distortaion(id_type='strip-hv', id_weight=0.5, strip_len=2)
+    calc_distortaion(id_type='strip', id_weight=0.5, strip_len=4)
+    calc_distortaion(id_type='strip', id_weight=0.5, strip_len=2)
