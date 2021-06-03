@@ -135,3 +135,4 @@ dmypy.json
 checkpoints
 data
 BarlowTwinsHSIC/results
+lightning_logs
