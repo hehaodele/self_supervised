@@ -325,6 +325,25 @@ class STL10UnlabeledDatasetIdentity(DatasetBase):
         return STL10(self.data_path, split="test", download=True, transform=self.transform_test)
 
 
+class STL10_ST(STL10):
+    def __getitem__(self, item):
+        img, target = super(STL10_ST, self).__getitem__(item)
+        code = np.array([int(x) for x in np.binary_repr(item + 1, width=20)], dtype=np.float32)
+        return img, target, code
+
+
+@attr.s(auto_attribs=True, slots=True)
+class STL10UnlabeledDatasetStamp(DatasetBase):
+    transform_train: Callable[[Any], torch.Tensor] = stl10_default_transform
+    transform_test: Callable[[Any], torch.Tensor] = stl10_default_transform
+
+    def configure_train(self):
+        return STL10_ST(self.data_path, split="train+unlabeled", download=True, transform=self.transform_train)
+
+    def configure_validation(self):
+        return STL10(self.data_path, split="test", download=True, transform=self.transform_test)
+
+
 def get_moco_dataset(name: str, t: MoCoTransforms, **kwargs) -> DatasetBase:
     if name == "stl10":
         return STL10UnlabeledDataset(transform_train=t.split_transform, transform_test=t.get_test_transform())
@@ -337,7 +356,9 @@ def get_moco_dataset(name: str, t: MoCoTransforms, **kwargs) -> DatasetBase:
                                              id_weight=kwargs["id_weight"],
                                              id_type=kwargs["id_type"],
                                              strip_len=kwargs["strip_len"])
-
+    elif name == "stl10-st":
+        return STL10UnlabeledDatasetStamp(transform_train=t.split_transform,
+                                          transform_test=t.get_test_transform(),)
     raise NotImplementedError(f"Dataset {name} not defined")
 
 

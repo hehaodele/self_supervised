@@ -1,6 +1,7 @@
 import argparse
 from moco import MoCoMethodParams
 from moco import MoCoMethod
+from moco_train_stamp import MoCoMethodStamp
 from linear_classifier import LinearClassifierMethod
 
 parser = argparse.ArgumentParser(description='PyTorch Training')
@@ -16,6 +17,9 @@ parser.add_argument('--strip-len', default=96, type=int)  # Strip Code Length
 
 def getMethodParam(method):
     if method == 'moco':
+        hparams = MoCoMethodParams()
+
+    elif method == 'moco-st':
         hparams = MoCoMethodParams()
 
     elif method == 'byol':
@@ -73,7 +77,10 @@ if __name__ == '__main__':
     """
     train
     """
-    model = MoCoMethod(hparams)
+    if args.method == 'moco-st':
+        model = MoCoMethodStamp(hparams)
+    else:
+        model = MoCoMethod(hparams)
     trainer = pl.Trainer(gpus=1, max_epochs=320)
     trainer.fit(model)
 
