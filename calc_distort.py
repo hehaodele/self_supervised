@@ -28,17 +28,8 @@ if __name__ == '__main__':
     # calc_distortaion(id_type='2d', id_weight=0.5, strip_len=96)
     # calc_distortaion(id_type='2d', id_weight=0.25, strip_len=96)
 
-    calc_distortaion(id_type='strip-hv', id_weight=1.0, strip_len=32)
-    # calc_distortaion(id_type='strip-hv', id_weight=0.75, strip_len=2)
-    # calc_distortaion(id_type='strip-hv', id_weight=0.5, strip_len=2)
-    # calc_distortaion(id_type='strip-hv', id_weight=0.25, strip_len=2)
-
-    # calc_distortaion(id_type='strip-h', id_weight=0.5, strip_len=96)
-    # calc_distortaion(id_type='strip-h', id_weight=0.5, strip_len=64)
-    # calc_distortaion(id_type='strip-h', id_weight=0.5, strip_len=32)
-    # calc_distortaion(id_type='strip-h', id_weight=0.5, strip_len=8)
-
-    # calc_distortaion(id_type='strip-hv', id_weight=0.5, strip_len=4)
-    # calc_distortaion(id_type='strip-hv', id_weight=0.5, strip_len=2)
-    # calc_distortaion(id_type='strip-hv', id_weight=0.5, strip_len=4)
-    # calc_distortaion(id_type='strip-hv', id_weight=0.5, strip_len=2)
+    calc_distortaion(id_type='strip-hv', id_weight=0.75, strip_len=4)
+    for w in [0.25]:
+        for l in [64,32,8,4]:
+            print(w,l)
+            calc_distortaion(id_type='strip-hv', id_weight=w, strip_len=l)
